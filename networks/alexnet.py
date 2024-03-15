@@ -26,7 +26,7 @@ class AlexNet(AbstractCNN):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
-        flatten_out_size = 36864
+        flatten_out_size = 30976
         self.linear = nn.Sequential(
             nn.Linear(in_features=flatten_out_size + 1, out_features=4096),
             nn.ReLU(),
