@@ -1,6 +1,6 @@
 import torch
 
-from torch import Tensor
+from torchvision.transforms import v2
 
 import pandas as pd
 import numpy as np
@@ -64,11 +64,9 @@ class BuildingDataset(torch.utils.data.Dataset):
     - tensor_y is target.
     """
 
-    def __init__(self, folder: str, df: pd.DataFrame, device: str,
-                 mean: torch.float, std: torch.float):
+    def __init__(self, folder: str, df: pd.DataFrame, device: str, mean: float, std: float):
         self.df = df
-        self.df[["distance"]] = self.numerical_normalize(
-            self.df[["distance"]], mean, std)
+        self.df[["distance"]] = self.numerical_normalize(self.df[["distance"]], mean, std)
         self.folder = folder
         self.device = device
 
@@ -76,31 +74,29 @@ class BuildingDataset(torch.utils.data.Dataset):
         return len(self.df)
 
     @staticmethod
-    def image2tensor(pic: Image, device: str = None) -> torch.Tensor:
-        img = torch.as_tensor(np.array(pic, copy=True), device=device,
-                              dtype=torch.float32) / 255
-        img = img.view(pic.size[1], pic.size[0], 3)
+    def image2tensor(pic: Image, size: tuple[int, int], device: str = None, ) -> torch.Tensor:
+        # картинка приводится к размеру 400*400, величина каждого пикселя делится на 255
+        img = v2.Resize(size)(pic)
+        img = torch.as_tensor(np.array(img, copy=True), device=device, dtype=torch.float32) / 255
+        img = img.view(size[1], size[0], 3)
         # put it from HWC to CHW format
         img = img.permute((2, 0, 1))
         return img
 
-    def numerical_normalize(self,
-                            data: pd.DataFrame | float | int,
-                            mean, std) -> pd.DataFrame | float:
+    def numerical_normalize(self, data: pd.DataFrame | float | int, mean: float, std: float) -> pd.DataFrame | float:
         """
         Returns normalized data.
         """
 
+        # нормализация minmax
         data = (data - mean) / std
         return data
 
-    def __getitem__(self, key: int) -> tuple[Tensor, Tensor]:
+    def __getitem__(self, key: int) -> tuple[torch.Tensor, torch.Tensor]:
         filename = f"{self.folder}/{self.df['filename'].iloc[key]}"
 
-        return (self.image2tensor(Image.open(filename), device=self.device)[:,
-                100:500, 300:700],
-                torch.tensor(self.df["distance"].iloc[key], device=self.device,
-                             dtype=torch.float32))
+        return (self.image2tensor(Image.open(filename), size=(400, 400), device=self.device),
+                torch.tensor(self.df["distance"].iloc[key], device=self.device, dtype=torch.float32))
 
 
 def get_height(dataloader, model) -> float:

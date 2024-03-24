@@ -4,7 +4,7 @@ from torch import nn
 
 class AlexNet(AbstractCNN):
     def __init__(self, n_channels: int = 3,
-                 image_shape: tuple[int, int] = (440, 440)):
+                 image_shape: tuple[int, int] = (400, 400)):
         super().__init__(n_channels, image_shape)
         self.convolution = nn.Sequential(
             nn.Conv2d(in_channels=n_channels, out_channels=96, kernel_size=11,
@@ -26,7 +26,7 @@ class AlexNet(AbstractCNN):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
-        flatten_out_size = 36864
+        flatten_out_size = 30976
         self.linear = nn.Sequential(
             nn.Linear(in_features=flatten_out_size + 1, out_features=4096),
             nn.ReLU(),
