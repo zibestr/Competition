@@ -1,8 +1,8 @@
 # Thanks akorolkov
 import torch
 import torch.nn as nn
-from networks.units import Conv2d, Reduction_A
-from networks._network import AbstractCNN
+from src.networks.units import Conv2d, Reduction_A
+from src.networks._network import AbstractCNN
 
 class Stem(nn.Module):
     def __init__(self, in_channels):
