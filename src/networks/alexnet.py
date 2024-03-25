@@ -1,4 +1,4 @@
-from networks._network import AbstractCNN
+from src.networks._network import AbstractCNN
 from torch import nn
 
 
