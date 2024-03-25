@@ -73,6 +73,7 @@ class Board:
 
     def __graw_plots(self):
         fig = figure(figsize=(8, 10), dpi=100)
+        fig.suptitle("Score Board", fontsize=16)
         axes = fig.subplots(3, 2)
 
         axes[0, 0].hist(list(map(lambda x: x.min(),

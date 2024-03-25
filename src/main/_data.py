@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
-from torch import as_tensor, tensor, Tensor, float32
+from torch import tensor, Tensor, float32
+from torchvision.transforms.v2 import Compose, PILToTensor, Resize, ToDtype
 from pandas import DataFrame, Series, read_csv
 from PIL import Image
 import numpy as np
@@ -62,33 +63,31 @@ class BuildingDataset(Dataset):
     - tensor_dist is distance between camera and building in meters,
     - tensor_y is target.
     """
-    normalize_params = {
-        "mean": None,
-        "std": None
-    }
-
     def __init__(self,
                  img_folder: str,
                  df: DataFrame,
-                 device: str):
+                 device: str,
+                 mean: float | None = None,
+                 std: float | None = None):
+        self.normalize_params = {
+            "mean": mean,
+            "std": std
+        }
         self.df = df
         self.df[["distance", "height"]] = self.numerical_normalize(
             self.df[["distance", "height"]]
         )
         self.folder = img_folder
         self.device = device
+        # Thanks to Grander78498
+        self.img_pipeline = Compose((
+            PILToTensor(),
+            Resize(size=(400, 400)),
+            ToDtype(dtype=float32),
+        ))
 
     def __len__(self) -> int:
         return len(self.df)
-
-    @staticmethod
-    def image2tensor(pic: Image,
-                     device: str = None) -> Tensor:
-        img = as_tensor(np.array(pic, copy=True), device=device, dtype=float32)
-        img = img.view(pic.size[1], pic.size[0], 3)
-        # put it from HWC to CHW format
-        img = img.permute((2, 0, 1))
-        return img
 
     def numerical_normalize(self,
                             data: DataFrame | float
@@ -110,18 +109,24 @@ class BuildingDataset(Dataset):
                                              Tensor]:
         filename = f"{self.folder}/{self.df['filename'].iloc[key]}"
 
-        return (self.image2tensor(Image.open(filename),
-                                  device=self.device)[:, :-200, 150: -370],
+        return (
+                self.img_pipeline(Image.open(filename)).to(self.device),
                 tensor(self.df["distance"].iloc[key],
                        device=self.device, dtype=float32),
                 tensor(self.df["height"].iloc[key],
-                       device=self.device, dtype=float32))
+                       device=self.device, dtype=float32)
+                )
 
 
 def make_datasets(filename: str,
                   img_folder: str,
                   train_ratio: float,
                   device: str) -> tuple[Dataset, Dataset]:
+    """
+    Make train and test datasets
+
+    Returns torch datasets.
+    """
     df = read_csv(filename)
     transformer = CoordinatesTransformPipeline(df)
     df = transformer.transform()
