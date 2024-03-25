@@ -5,4 +5,3 @@ from src.main._data import (
     BuildingDataset,
     CoordinatesTransformPipeline
 )
-from src.main._loader import ModelLoader
