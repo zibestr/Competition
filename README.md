@@ -44,4 +44,5 @@ $x_{norm}=\frac{x-mean}{std}$
 
 ## Конечный продукт
 Доступ к модели осуществляется через [__Telegram Bot__](https://t.me/HeightChecker_bot).\
-Все расчеты представлены в ___calculation.ipynb___, а исходный код в пакете ___src___.
+Все расчеты представлены в ___calculation.ipynb___, а исходный код в пакете ___src___.\
+Обученная модель лежит в [___model/resnet18.pth___](model)
